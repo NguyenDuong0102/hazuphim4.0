@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rạp Chiếu Phim Tự Động</title>
+    <style>
+        body { background-color: #111; color: #fff; font-family: sans-serif; text-align: center; }
+        .video-wrapper {
+            position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden;
+            max-width: 800px; margin: 20px auto; border: 2px solid #444; background: #000;
+        }
+        .video-wrapper iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+        
+        .movie-list { display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; margin-top: 20px; }
+        .movie-btn {
+            background: #333; color: white; border: none; padding: 15px 20px;
+            cursor: pointer; border-radius: 5px; font-size: 16px; transition: 0.3s;
+        }
+        .movie-btn:hover { background: #e50914; }
+        .loading { color: #888; margin-top: 20px; }
+    </style>
+</head>
+<body>
+
+    <h1>🎬 Phim Hay Cuối Tuần</h1>
+    
+    <div class="video-wrapper">
+        <iframe id="main-player" src="" frameborder="0" allow="autoplay; fullscreen"></iframe>
+    </div>
+
+    <p>Danh sách phim (Tự động cập nhật):</p>
+    
+    <div id="loading-text" class="loading">Đang tải danh sách phim từ Drive...</div>
+    <div class="movie-list" id="list-container">
+        </div>
+
+    <script>
+        // DÁN URL WEB APP BẠN VỪA COPY Ở BƯỚC 1 VÀO ĐÂY
+        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxn0fjHX4g9P5M10EoFLWG6xN1Xj4nYYu8bNceU6g5ilw4D1FA9OFSPLTj-kXrOgXMJMQ/exec';
+
+        async function loadMovies() {
+            try {
+                const response = await fetch(APPS_SCRIPT_URL);
+                const movies = await response.json();
+                
+                const listContainer = document.getElementById('list-container');
+                const loadingText = document.getElementById('loading-text');
+
+                // Xóa chữ "Đang tải..."
+                loadingText.style.display = 'none';
+
+                if (movies.length === 0) {
+                    listContainer.innerHTML = "Thư mục trống!";
+                    return;
+                }
+
+                // Tự động phát phim đầu tiên
+                playMovie(movies[0].id);
+
+                // Tạo nút bấm cho từng phim
+                movies.forEach(movie => {
+                    const btn = document.createElement('button');
+                    btn.className = 'movie-btn';
+                    // Cắt bỏ đuôi .mp4 cho đẹp (nếu muốn)
+                    btn.innerText = movie.name.replace('.mp4', '').replace('.mkv', ''); 
+                    btn.onclick = () => playMovie(movie.id);
+                    listContainer.appendChild(btn);
+                });
+
+            } catch (error) {
+                console.error(error);
+                document.getElementById('loading-text').innerText = "Lỗi không tải được danh sách!";
+            }
+        }
+
+        function playMovie(id) {
+            const embedUrl = `https://drive.google.com/file/d/${id}/preview`;
+            document.getElementById('main-player').src = embedUrl;
+        }
+
+        // Chạy hàm tải phim khi vào web
+        loadMovies();
+    </script>
+
+</body>
+</html>
